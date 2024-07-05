@@ -4,7 +4,7 @@ import pytest
 import clang.cindex  # Импорт модуля clang для работы с AST
 import subprocess, sys, re
 
-TRUE_TEST_AMOUNT = 2
+TRUE_TEST_AMOUNT = 4
 
 
 def run_tests(lang, exec_comm):
@@ -22,6 +22,8 @@ class TestParser(ABC):
         self.test_cases = {
             "got_7": False,
             "got_5": False,
+            "got_4": False,
+            "got_less_then_4": False,
         }
 
     @abstractmethod
@@ -78,6 +80,10 @@ class PythonTestParser(TestParser):
                 self.test_cases["got_7"] = True
             elif value == 5:
                 self.test_cases["got_5"] = True
+            elif value == 4:
+                self.test_cases["got_4"] = True
+            elif value < 4:
+                self.test_cases["got_less_then_4"] = True
 
     def analyze_tests(self):
 
@@ -144,6 +150,10 @@ class CTestParser(TestParser):
                 self.test_cases["got_7"] = True
             elif value == 5 and not key:
                 self.test_cases["got_5"] = True
+            elif value == 4 and not key:
+                self.test_cases["got_4"] = True
+            elif value > 4 and key:
+                self.test_cases["got_less_then_4"] = True
 
     def analyze_tests(self):
 
@@ -183,7 +193,7 @@ double foo(int n) {
     if (n == 7 || n == 5 || n < 5) {
         return -1;
     }
-    return std::abs(std::sqrt(n - 5) / ((n - 7)*(n + 4)));
+    return std::abs(std::sqrt(n - 4) / ((n - 7)*(n - 5)) - 1/(n - 4));
 }\n\n""" + student_answer
 
     else:
@@ -192,9 +202,9 @@ import pytest
 import math
 
 def foo(n):
-    if n in [7, 5] or n < 5:
+    if n in [7, 5, 4] or n < 4:
         return -1
-    return abs(math.sqrt(n - 5) / ((n - 7)*(n + 4)))\n\n""" + student_answer
+    return abs(math.sqrt(n - 4) / ((n - 7)*(n - 5)) - 1/(n - 4))\n\n""" + student_answer
 
     # Write the student code to a file
 

@@ -4,7 +4,7 @@ import pytest
 import clang.cindex  # Импорт модуля clang для работы с AST
 import subprocess, sys, re
 
-TRUE_TEST_AMOUNT = 2
+TRUE_TEST_AMOUNT = 3
 
 
 def run_tests(lang, exec_comm):
@@ -20,8 +20,9 @@ class TestParser(ABC):
     def __init__(self, filepath):
         self.filepath = filepath
         self.test_cases = {
-            "got_-1": False,
+            "got_less_then_-1": False,
             "got_5": False,
+            "got_8": False,
         }
 
     @abstractmethod
@@ -74,10 +75,12 @@ class PythonTestParser(TestParser):
                 raise Exception("Аргумент функции foo должен быть целым числом.")
 
             # Проверяем значение второго аргумента
-            if value == -1:
-                self.test_cases["got_-1"] = True
+            if value < -1:
+                self.test_cases["got_less_then_-1"] = True
             elif value == 5:
                 self.test_cases["got_5"] = True
+            elif value == 8:
+                self.test_cases["got_8"] = True
 
     def analyze_tests(self):
 
@@ -140,10 +143,12 @@ class CTestParser(TestParser):
             value = int(value)
 
             # Проверяем значение аргумента и обновляем словарь test_cases
-            if value == 1 and key:
-                self.test_cases["got_-1"] = True
+            if value > 1 and key:
+                self.test_cases["got_less_then_-1"] = True
             elif value == 5 and not key:
                 self.test_cases["got_5"] = True
+            elif value == 8 and not key:
+                self.test_cases["got_8"] = True
 
     def analyze_tests(self):
 
@@ -180,10 +185,10 @@ if __name__ == "__main__":
 #include <gtest/gtest.h>
 
 double foo(int n) {
-    if (n == -1 || n == 5 || n < -1) {
+    if (n == 5 || n == 8 || n < -1) {
         return -1;
     }
-    return std::abs(std::sqrt(2 * n + 2) / (n - 5));
+    return std::abs(std::sqrt(2 * n + 2) / ((n - 5)*(n - 8));
 }\n\n""" + student_answer
 
     else:
@@ -192,9 +197,9 @@ import pytest
 import math
 
 def foo(n):
-    if n in [-1, 5] or n < -1:
+    if n in [5, 8] or n < -1:
         return -1
-    return abs(math.sqrt(2*n + 2) / (n - 5))\n\n""" + student_answer
+    return abs(math.sqrt(2*n + 2) / ((n - 5)*(n - 8)))\n\n""" + student_answer
 
     # Write the student code to a file
 

@@ -1,11 +1,15 @@
 #include <gtest/gtest.h>
 
 TEST(FooTest, HandlesNegativeThree) {
-    EXPECT_DOUBLE_EQ(foo(-1), -1);
+    EXPECT_DOUBLE_EQ(foo(-5), -1);
+}
+
+TEST(FooTest, HandlesNegative) {
+    EXPECT_DOUBLE_EQ(foo(5), -1);
 }
 
 TEST(FooTest, HandlesNegativeOne) {
-    EXPECT_DOUBLE_EQ(foo(5), -1);
+    EXPECT_DOUBLE_EQ(foo(8), -1);
 }
 
 int main(int argc, char **argv) {
