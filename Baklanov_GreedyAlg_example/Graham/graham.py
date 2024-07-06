@@ -87,4 +87,4 @@ for i in range(n):
     inp = input().split(', ')
     points.append(Point(int(inp[0]), int(inp[1])))
 result, area = convexHull(points, n)
-print(result, area)
+print((result, area))
