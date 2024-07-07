@@ -5,6 +5,7 @@ def generate():
     # Список своих тестов
     return ["4\nBrave_New_World 1932\nWuthering_Heights 1847\nThe_Great_Gatsby 1925\nThe_Catcher_in_the_Rye 1951\n",
             "4\nBook_C 1950\nBook_A 1950\nBook_B 1950\nBook_D 1950\n",
+            "4\nBook_A 1950\nBook_A 1950\nBook_B 1950\nBook_B 1950\n",
             "4\nSame_Title 1960\nSame_Title 1970\nSame_Title 1950\nSame_Title 1980\n",
             "4\nBook_One 2000\nBook_Two 1999\nBook_Three 2000\nBook_Four 1998\n",
             "4\nBook_One 2000\nBook_Two 1999\nBook_Three 2000\nBook_Four 1998\n"]
