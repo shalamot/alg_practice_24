@@ -7,7 +7,8 @@ def coin_change(coins, amount):
             result.append(coin)
     return len(result)
 
-amount = int(input())
-coins = list(map(int, input().split(', ')))
-result = coin_change(coins, amount)
-print(result)
+if __name__ == "__main__":
+    amount = int(input())
+    coins = list(map(int, input().split(', ')))
+    result = coin_change(coins, amount)
+    print(result)
