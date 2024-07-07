@@ -81,16 +81,14 @@ class PythonTestParser(TestParser):
 
     def check_func(self, sub_node):
 
-        # Проверяем, является ли вызов функции вызовом функции 'divide'
+        # Проверяем, является ли вызов функции вызовом функции 'foo'
         if isinstance(sub_node.func, ast.Name) and sub_node.func.id == "foo":
 
-            # Проверяем, что в функцию передаются два аргумента
+            # Проверяем, что в функцию передается один аргумент
             if len(sub_node.args) != 1:
                 raise Exception("Функция foo должна принимать ровно один аргумент.")
 
-            # Проверяем, что второй аргумент - это либо константа, либо унарная операция
-            # В структуре AST отрицательное число представлено не типом ast.Constant, но ast.UnaryOp,
-            # имеющего свой знак и операнд, что требует большего количества проверок
+            # Проверяем, что второй аргумент - это константа -- В AST может быть и строковой переменной
 
             _arg = sub_node.args[0]
 
@@ -126,13 +124,24 @@ class CTestParser(TestParser):
 
         # print("    " * depth + f"{node.kind.name} - {node.spelling}")  # ---- для демонстрации вложенности (ВАЖНО)
 
-        # Проверяем, является ли узел вызовом функции divide
+        # Проверяем, является ли узел вызовом функции foo
+        # func_key нужен, чтобы проверить, что после вызова функции стоит строковая переменнаяя -- особенность структуры, иначе никак не проверить,
+        # что стоит следующим значением. Если был вызов функции, мы делаем её True, а если она встретилась следующей по итерации
         if (node.kind == clang.cindex.CursorKind.CALL_EXPR or node.kind == clang.cindex.CursorKind.OVERLOADED_DECL_REF) and node.spelling == 'foo' or self.func_key:
-            # Если это вызов функции divide, проверяем её аргументы
+            # Если это вызов функции foo, проверяем её аргументы
             if self.func_key:
                 self.check_func(node)
             else:
                 self.func_key = True
+            '''
+            # Возможная альтернатива
+            if self.func_key:
+                self.check_func(node)
+            elif (node.kind == clang.cindex.CursorKind.CALL_EXPR or node.kind == clang.cindex.CursorKind.OVERLOADED_DECL_REF) and node.spelling == 'foo':
+                self.func_key = True
+            else:
+                self.func_key = False
+            '''
 
         # Рекурсивно вызываем walk_ast для детей текущего узла
         for child in node.get_children():
@@ -144,9 +153,11 @@ class CTestParser(TestParser):
             raise Exception("Аргумент функции foo должен быть строкой.")
         else:
 
+            # Получаем строковую переменную
             value = list(node.get_tokens())[0].spelling
             self.func_key = False
-
+            
+            # Убираем скобки по бокам -- так строка хранится в структуре
             self.fill_test_cases(value.strip('"'))
 
     def analyze_tests(self):
@@ -306,7 +317,8 @@ def foo(date_str):
         if not output.returncode == 0:
             raise Exception("** Error: mistake in user tests **")
 
-        # Здесь будет объект с вызовом метода класса, который пропарсит код и вернёт некий ответ (True / False)
+        # объект с вызовом метода класса, который пропарсит код и записывает словарь со всеми тестами, аналогичный полю test_cases абстрактного класса, в 
+        # котором отображено наличии у пользователя нужных тестов.
         correctness = obj.analyze_tests()
 
         for el in correctness.keys():
