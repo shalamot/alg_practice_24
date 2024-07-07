@@ -4,7 +4,7 @@ import ast
 import pytest
 import subprocess, sys, re
 
-TRUE_TEST_AMOUNT = 4
+TRUE_TEST_AMOUNT = 3
 
 
 def run_tests(lang, exec_comm):
@@ -21,7 +21,6 @@ class TestParser(ABC):
         self.filepath = filepath
         self.func_builtin_str_len = 21
         self.test_cases = {
-            "cut_zero": False,
             "cut_negative": False,
             "cut_over_len": False,
             "cut_possible": False,
@@ -77,9 +76,7 @@ class PythonTestParser(TestParser):
                 raise Exception("Аргумент функции foo должен быть целым числом.")
 
             # Проверяем значение второго аргумента
-            if value == 0:
-                self.test_cases["cut_zero"] = True
-            elif value < 0:
+            if value < 0:
                 self.test_cases["cut_negative"] = True
             elif value >= self.func_builtin_str_len:
                 self.test_cases["cut_over_len"] = True
@@ -147,9 +144,7 @@ class CTestParser(TestParser):
             value = int(value)
 
             # Проверяем значение аргумента и обновляем словарь test_cases
-            if value == 0:
-                self.test_cases["cut_zero"] = True
-            elif value > 0 and key:
+            if value > 0 and key:
                 self.test_cases["cut_negative"] = True
             elif value >= self.func_builtin_str_len and not key:
                 self.test_cases["cut_over_len"] = True
