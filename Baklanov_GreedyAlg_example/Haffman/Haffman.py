@@ -13,7 +13,6 @@ class Node:
 def build_huffman_tree(chars, freq):
     priority_queue = [Node(char, f) for char, f in zip(chars, freq)]
     heapq.heapify(priority_queue)
-
     while len(priority_queue) > 1:
         left_child = heapq.heappop(priority_queue)
         right_child = heapq.heappop(priority_queue)
@@ -21,7 +20,6 @@ def build_huffman_tree(chars, freq):
         merged_node.left = left_child
         merged_node.right = right_child
         heapq.heappush(priority_queue, merged_node)
-
     return priority_queue[0]
 
 def generate_huffman_codes(node, code="", huffman_codes={}):
@@ -46,19 +44,18 @@ def huffman_decode(encoded_text, root):
             node = root
     return ''.join(decoded_text)
 
-
-dna_sequence = input()
-freq = {}
-for char in dna_sequence:
-    if char in freq:
-        freq[char] += 1
-    else:
-        freq[char] = 1
-
-chars = list(freq.keys())
-frequencies = list(freq.values())
-huffman_tree = build_huffman_tree(chars, frequencies)
-huffman_codes = generate_huffman_codes(huffman_tree)
-encoded_text = huffman_encode(dna_sequence, huffman_codes)
-decoded_text = huffman_decode(encoded_text, huffman_tree)
-print((int(encoded_text), decoded_text == dna_sequence))
+if __name__ == "__main__":
+    dna_sequence = input()
+    freq = {}
+    for char in dna_sequence:
+        if char in freq:
+            freq[char] += 1
+        else:
+            freq[char] = 1
+    chars = list(freq.keys())
+    frequencies = list(freq.values())
+    huffman_tree = build_huffman_tree(chars, frequencies)
+    huffman_codes = generate_huffman_codes(huffman_tree)
+    encoded_text = huffman_encode(dna_sequence, huffman_codes)
+    decoded_text = huffman_decode(encoded_text, huffman_tree)
+    print(encoded_text, decoded_text == dna_sequence)
