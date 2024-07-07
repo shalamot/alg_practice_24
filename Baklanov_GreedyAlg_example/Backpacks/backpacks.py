@@ -13,8 +13,9 @@ def maximize_loot(capacity, items):
 
     return current_weight, current_value
 
-
-capacity = int(input())
-count_items = int(input())
-items = [list(map(int, input().split(','))) for i in range(count_items)]
-print(maximize_loot(capacity, items))
+if __name__ == "__main__":
+    capacity = int(input())
+    count_items = int(input())
+    items = [list(map(int, input().split(','))) for i in range(count_items)]
+    current_weight, current_value = maximize_loot(capacity, items)
+    print(current_weight, current_value)
