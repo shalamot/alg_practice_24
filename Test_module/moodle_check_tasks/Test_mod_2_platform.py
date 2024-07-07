@@ -44,14 +44,14 @@ class PythonTestParser(TestParser):
 
     def check_func(self, sub_node):
 
-        # Проверяем, является ли вызов функции вызовом функции 'divide'
+        # Проверяем, является ли вызов функции вызовом функции 'foo'
         if isinstance(sub_node.func, ast.Name) and sub_node.func.id == "foo":
 
             # Проверяем, что в функцию передаются два аргумента
             if len(sub_node.args) != 1:
                 raise Exception("Функция foo должна принимать ровно один аргумент.")
 
-            # Проверяем, что второй аргумент - это либо константа, либо унарная операция
+            # Проверяем, что аргумент - это либо константа, либо унарная операция
             # В структуре AST отрицательное число представлено не типом ast.Constant, но ast.UnaryOp,
             # имеющего свой знак и операнд, что требует большего количества проверок
 
@@ -75,7 +75,7 @@ class PythonTestParser(TestParser):
             else:
                 raise Exception("Аргумент функции foo должен быть целым числом.")
 
-            # Проверяем значение второго аргумента
+            # Проверяем значение аргумента
             if value == 0:
                 self.test_cases["division_by_zero"] = True
             elif value == 3:
@@ -107,7 +107,7 @@ class CTestParser(TestParser):
 
         # print("    " * depth + f"{node.kind.name} - {node.spelling}")  # ---- для демонстрации вложенности (ВАЖНО)
 
-        # Проверяем, является ли узел вызовом функции divide
+        # Проверяем, является ли узел вызовом функции foo
         if node.kind == clang.cindex.CursorKind.CALL_EXPR:
             # Если это вызов функции divide, проверяем её аргументы
             if node.kind == clang.cindex.CursorKind.CALL_EXPR and node.spelling == 'foo':
@@ -126,11 +126,11 @@ class CTestParser(TestParser):
 
         if len(args) != 1:
             raise Exception("Функция foo должна принимать ровно один аргумент.")
-        # Проверяем, что функция имеет ровно два аргумента
+        # Проверяем, что функция имеет ровно один аргумент
         else:
-            right_arg = args[0]  # Получаем второй аргумент функции
+            right_arg = args[0]  # Получаем аргумент функции
 
-            # Проверяем, что второй аргумент - это либо целое число, либо унарная операция
+            # Проверяем, что аргумент - это либо целое число, либо унарная операция
             if right_arg.kind not in [clang.cindex.CursorKind.INTEGER_LITERAL,
                                       clang.cindex.CursorKind.UNARY_OPERATOR]:
                 raise Exception("Аргумент функции foo должен быть целым числом.")
@@ -235,7 +235,8 @@ def foo(n):
         if not output.returncode == 0:
             raise Exception("** Error: mistake in user tests **")
 
-        # Здесь будет объект с вызовом метода класса, который пропарсит код и вернёт некий ответ (True / False)
+        # объект с вызовом метода класса, который пропарсит код и записывает словарь со всеми тестами, аналогичный полю test_cases абстрактного класса, в 
+        # котором отображено наличии у пользователя нужных тестов.
         correctness = obj.analyze_tests()
 
         for el in correctness.keys():
