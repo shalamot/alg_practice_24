@@ -45,7 +45,7 @@ class PythonTestParser(TestParser):
         # Проверяем, является ли вызов функции вызовом функции 'foo'
         if isinstance(sub_node.func, ast.Name) and sub_node.func.id == "foo":
 
-            # Проверяем, что в функцию передаются два аргумента
+            # Проверяем, что в функцию передается один аргумент
             if len(sub_node.args) != 1:
                 raise Exception("Функция foo должна принимать ровно один аргумент.")
 
