@@ -47,7 +47,7 @@ class PythonTestParser(TestParser):
         # Проверяем, является ли вызов функции вызовом функции 'foo'
         if isinstance(sub_node.func, ast.Name) and sub_node.func.id == "foo":
 
-            # Проверяем, что в функцию передаются два аргумента
+            # Проверяем, что в функцию передается один аргумент
             if len(sub_node.args) != 1:
                 raise Exception("Функция foo должна принимать ровно один аргумент.")
 
@@ -109,7 +109,7 @@ class CTestParser(TestParser):
 
         # Проверяем, является ли узел вызовом функции foo
         if node.kind == clang.cindex.CursorKind.CALL_EXPR:
-            # Если это вызов функции divide, проверяем её аргументы
+            # Если это вызов функции foo, проверяем её аргументы
             if node.kind == clang.cindex.CursorKind.CALL_EXPR and node.spelling == 'foo':
                 self.check_func(node)
 
