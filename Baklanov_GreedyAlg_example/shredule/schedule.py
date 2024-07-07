@@ -11,8 +11,10 @@ def shredule(tasks):
             res.append(task)
             current_end = task[1]
     return len(res)
-n = int(input())
-tasks = []
-for i in range(n):
-    tasks.append(list(map(int, input().split(', '))))
-print(shredule(tasks))
+
+if __name__ == "__main__":
+    n = int(input())
+    tasks = []
+    for i in range(n):
+        tasks.append(list(map(int, input().split(', '))))
+    print(shredule(tasks))

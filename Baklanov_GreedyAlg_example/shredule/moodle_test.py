@@ -7,7 +7,7 @@ import subprocess
 import re
 student_answer = """{{ STUDENT_ANSWER | e('py') }}"""
 language = """{{ ANSWER_LANGUAGE | e('py') }}""".lower()
-language_extension_map = {'c':'c', 'cpp':'cpp', 'java':'java', 'python3':'py'}
+language_extension_map = {'cpp':'cpp', 'python3':'py'}
 
 if language not in language_extension_map.keys():
     raise Exception('Error in question. Unknown/unexpected language ({})'.format(language))
