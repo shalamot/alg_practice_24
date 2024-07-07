@@ -310,8 +310,7 @@ def foo(date_str):
         correctness = obj.analyze_tests()
 
         for el in correctness.keys():
-            if not correctness[
-                el]:  # Если не все тесты проверены студентом, то сохраняем прежний вывод с небольшим упрощением
+            if not correctness[el]:  # Если не все тесты проверены студентом, то сохраняем прежний вывод с небольшим упрощением
                 result = 'Test: {}\n'.format('1')
                 result += 'Your answer: {}\n'.format('Incorrect set of tests.')
                 result += 'Correct: {}\n'.format('Correct set of tests.')
