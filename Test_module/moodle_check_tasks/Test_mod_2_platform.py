@@ -190,7 +190,7 @@ if __name__ == "__main__":
 
 
 double foo(int n) {
-    if (n == 0 || n == 3 || n == 6 || n < 0) {
+    if (n <= 0 || n == 3 || n == 6) {
         return -1;
     }
     return std::round(std::abs(std::sqrt(n) + 1.0 / n + std::pow(n, 2) - 16.0 / ((std::pow(n, 2) - 9) * (n * 6))) * 100) / 100.0;
@@ -203,7 +203,7 @@ import pytest
 def foo(n):
     if not isinstance(n, int):
         raise Exception("** Program failed. Incorrect type for function foo **")
-    if n in [0, 3, 6] or n < 0:
+    if n in [3, 6] or n <= 0:
         return -1
     return abs(math.sqrt(n) + 1/n + n**2 - 16/((n**2 - 9)*(n * 6))).__round__()\n\n""" + student_answer
 
