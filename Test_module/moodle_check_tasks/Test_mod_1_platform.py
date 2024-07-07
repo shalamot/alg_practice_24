@@ -103,7 +103,7 @@ class CTestParser(TestParser):
 
         # Проверяем, является ли узел вызовом функции foo
         if node.kind == clang.cindex.CursorKind.CALL_EXPR:
-            # Если это вызов функции divide, проверяем её аргументы
+            # Если это вызов функции foo, проверяем её аргументы
             if node.kind == clang.cindex.CursorKind.CALL_EXPR and node.spelling == 'foo':
                 self.check_func(node)
 
