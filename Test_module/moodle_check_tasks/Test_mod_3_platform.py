@@ -204,7 +204,7 @@ import pytest
 
 def foo(idx):
     foo_string = 'This is foo() string.'
-    if idx < 0 or idx == 0 or len(foo_string) <= idx:
+    if idx <= 0 or len(foo_string) <= idx:
         return False
     return True\n\n""" + student_answer
 
