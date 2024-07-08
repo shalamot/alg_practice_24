@@ -41,6 +41,9 @@ if language not in language_extension_map.keys():
 
 filename = '__tester__.' + language_extension_map[language]
 
+if any(s in student_answer for s in ['sort(', 'stable_sort', 'sorted', 'qsort', 'sort (', 'sort(  ']):
+    raise Exception("** Пользоваться библиотечными функциями сортировки запрещено **")
+
 # Write the student code to a file
 
 with open(filename, "w") as src:
