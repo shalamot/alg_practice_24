@@ -1,5 +1,3 @@
-#include <gtest/gtest.h>
-
 TEST(FooTest, DivisionByZero) {
     EXPECT_EQ(foo(0), -1);
 }

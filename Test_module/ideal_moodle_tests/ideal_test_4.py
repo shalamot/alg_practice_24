@@ -1,5 +1,3 @@
-import pytest
-
 def test_1():
     assert foo("31.12.2022") == False
 

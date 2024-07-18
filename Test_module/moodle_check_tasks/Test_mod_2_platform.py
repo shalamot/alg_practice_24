@@ -4,6 +4,7 @@ import ast
 import pytest
 import subprocess, sys, re
 
+clang.cindex.Config.set_library_file("/usr/local/lib/python3.8/dist-packages/clang/native/libclang.so")
 TRUE_TEST_AMOUNT = 4
 
 
@@ -19,6 +20,7 @@ def run_tests(lang, exec_comm):
 class TestParser(ABC):
     def __init__(self, filepath):
         self.filepath = filepath
+        self.func_key = False
         self.test_cases = {
             "division_by_zero": False,
             "division_by_3": False,
@@ -108,10 +110,15 @@ class CTestParser(TestParser):
         # print("    " * depth + f"{node.kind.name} - {node.spelling}")  # ---- для демонстрации вложенности (ВАЖНО)
 
         # Проверяем, является ли узел вызовом функции foo
-        if node.kind == clang.cindex.CursorKind.CALL_EXPR:
+        # func_key нужен, чтобы проверить, что после вызова функции стоит целочисленная переменнаяя -- особенность структуры, иначе никак не проверить,
+        # что стоит следующим значением. Если был вызов функции, мы делаем её True, если она встретилась следующей по итерации
+        if (
+                node.kind == clang.cindex.CursorKind.CALL_EXPR or node.kind == clang.cindex.CursorKind.OVERLOADED_DECL_REF) and node.spelling == 'foo' or self.func_key:
             # Если это вызов функции foo, проверяем её аргументы
-            if node.kind == clang.cindex.CursorKind.CALL_EXPR and node.spelling == 'foo':
+            if self.func_key:
                 self.check_func(node)
+            else:
+                self.func_key = True
 
         # Рекурсивно вызываем walk_ast для детей текущего узла
         for child in node.get_children():
@@ -119,31 +126,25 @@ class CTestParser(TestParser):
 
     def check_func(self, node):
 
-        # Получаем аргументы функции
-        args = list(node.get_arguments())
         value = None  # Инициализируем переменную для хранения значения аргумента
         key = False  # Инициализируем ключ для проверки унарного оператора
 
-        if len(args) != 1:
-            raise Exception("Функция foo должна принимать ровно один аргумент.")
-        # Проверяем, что функция имеет ровно один аргумент
+        # Проверяем, что аргумент - это либо целое число, либо унарная операция
+        if node.kind not in [clang.cindex.CursorKind.INTEGER_LITERAL, clang.cindex.CursorKind.UNARY_OPERATOR]:
+            raise Exception("Аргумент функции foo должен быть целым числом.")
         else:
-            right_arg = args[0]  # Получаем аргумент функции
 
-            # Проверяем, что аргумент - это либо целое число, либо унарная операция
-            if right_arg.kind not in [clang.cindex.CursorKind.INTEGER_LITERAL,
-                                      clang.cindex.CursorKind.UNARY_OPERATOR]:
-                raise Exception("Аргумент функции foo должен быть целым числом.")
+            # Получаем целочисленным переменную
 
             # Если это унарная операция, получаем её операнд
-            if right_arg.kind == clang.cindex.CursorKind.UNARY_OPERATOR:
+            if node.kind == clang.cindex.CursorKind.UNARY_OPERATOR:
                 # Получаем дочерние узлы унарного оператора
-                right_arg = list(right_arg.get_children())[0]
+                node = list(node.get_children())[0]
                 key = True  # Устанавливаем ключ в True
 
-            # Получаем значение аргумента и преобразуем его в целое число
-            value = list(right_arg.get_tokens())[0].spelling
+            value = list(node.get_tokens())[0].spelling
             value = int(value)
+            self.func_key = False
 
             # Проверяем значение аргумента и обновляем словарь test_cases
             if value == 0:
@@ -158,7 +159,6 @@ class CTestParser(TestParser):
     def analyze_tests(self):
 
         # Создаем индекс для парсинга исходного кода
-        clang.cindex.Config.set_library_file("/usr/lib/llvm-17/lib/libclang.so")
         index = clang.cindex.Index.create()
         # Парсим исходный код и создаем единицу трансляции (translation unit)
         translation_unit = index.parse(self.filepath)
@@ -176,6 +176,7 @@ class CTestParser(TestParser):
 
 if __name__ == "__main__":
     student_answer = """{{ STUDENT_ANSWER | e('py') }}"""
+    saved_for_cpp = student_answer
     language = """{{ ANSWER_LANGUAGE | e('py') }}""".lower()
     language_extension_map = {'cpp': 'cpp', 'python3': 'py'}
 
@@ -183,10 +184,12 @@ if __name__ == "__main__":
         raise Exception('Error in question. Unknown/unexpected language ({})'.format(language))
 
     filename = '__tester__.' + language_extension_map[language]
+    for_cpp_filename = 'for_cpp.cpp'
 
     if language == 'cpp':
         student_answer = """\n
 #include <cmath>
+#include <gtest/gtest.h>
 
 
 double foo(int n) {
@@ -195,6 +198,12 @@ double foo(int n) {
     }
     return std::round(std::abs(std::sqrt(n) + 1.0 / n + std::pow(n, 2) - 16.0 / ((std::pow(n, 2) - 9) * (n * 6))) * 100) / 100.0;
 }\n\n""" + student_answer
+
+        if '#include' and 'gtest' in saved_for_cpp:
+            raise Exception('Уберите импорт библиотеки :)')
+
+        with open(for_cpp_filename, "w") as src:
+            print(saved_for_cpp, file=src)
 
     else:
         student_answer = """\n
@@ -220,7 +229,7 @@ def foo(n):
         if return_code != 0:
             raise Exception("** Compilation failed. Testing aborted **")
 
-        obj = CTestParser(filepath=filename)
+        obj = CTestParser(filepath=for_cpp_filename)
         exec_command = ["./__tester__"]
 
     else:  # Python doesn't need a compile phase
@@ -235,12 +244,13 @@ def foo(n):
         if not output.returncode == 0:
             raise Exception("** Error: mistake in user tests **")
 
-        # объект с вызовом метода класса, который пропарсит код и записывает словарь со всеми тестами, аналогичный полю test_cases абстрактного класса, в 
+        # объект с вызовом метода класса, который пропарсит код и записывает словарь со всеми тестами, аналогичный полю test_cases абстрактного класса, в
         # котором отображено наличии у пользователя нужных тестов.
         correctness = obj.analyze_tests()
 
         for el in correctness.keys():
-            if not correctness[el]:  # Если не все тесты проверены студентом, то сохраняем прежний вывод с небольшим упрощением
+            if not correctness[
+                el]:  # Если не все тесты проверены студентом, то сохраняем прежний вывод с небольшим упрощением
                 result = 'Test: {}\n'.format('1')
                 result += 'Your answer: {}\n'.format('Incorrect set of tests.')
                 result += 'Correct: {}\n'.format('Correct set of tests.')

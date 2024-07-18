@@ -1,5 +1,3 @@
-import pytest
-
 def test_division_by_zero():
     assert foo(0) == -1
 

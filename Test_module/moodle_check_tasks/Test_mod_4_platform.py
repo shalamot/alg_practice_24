@@ -4,6 +4,7 @@ import ast
 import pytest
 import subprocess, sys, re
 
+clang.cindex.Config.set_library_file("/usr/local/lib/python3.8/dist-packages/clang/native/libclang.so")
 TRUE_TEST_AMOUNT = 5
 
 
@@ -127,7 +128,8 @@ class CTestParser(TestParser):
         # Проверяем, является ли узел вызовом функции foo
         # func_key нужен, чтобы проверить, что после вызова функции стоит строковая переменнаяя -- особенность структуры, иначе никак не проверить,
         # что стоит следующим значением. Если был вызов функции, мы делаем её True, а если она встретилась следующей по итерации
-        if (node.kind == clang.cindex.CursorKind.CALL_EXPR or node.kind == clang.cindex.CursorKind.OVERLOADED_DECL_REF) and node.spelling == 'foo' or self.func_key:
+        if (
+                node.kind == clang.cindex.CursorKind.CALL_EXPR or node.kind == clang.cindex.CursorKind.OVERLOADED_DECL_REF) and node.spelling == 'foo' or self.func_key:
             # Если это вызов функции foo, проверяем её аргументы
             if self.func_key:
                 self.check_func(node)
@@ -156,14 +158,13 @@ class CTestParser(TestParser):
             # Получаем строковую переменную
             value = list(node.get_tokens())[0].spelling
             self.func_key = False
-            
+
             # Убираем скобки по бокам -- так строка хранится в структуре
             self.fill_test_cases(value.strip('"'))
 
     def analyze_tests(self):
 
         # Создаем индекс для парсинга исходного кода
-        clang.cindex.Config.set_library_file("/usr/lib/llvm-17/lib/libclang.so")
         index = clang.cindex.Index.create()
         # Парсим исходный код и создаем единицу трансляции (translation unit)
         translation_unit = index.parse(self.filepath)
@@ -181,6 +182,7 @@ class CTestParser(TestParser):
 
 if __name__ == "__main__":
     student_answer = """{{ STUDENT_ANSWER | e('py') }}"""
+    saved_for_cpp = student_answer
     language = """{{ ANSWER_LANGUAGE | e('py') }}""".lower()
     language_extension_map = {'cpp': 'cpp', 'python3': 'py'}
 
@@ -188,6 +190,7 @@ if __name__ == "__main__":
         raise Exception('Error in question. Unknown/unexpected language ({})'.format(language))
 
     filename = '__tester__.' + language_extension_map[language]
+    for_cpp_filename = 'for_cpp.cpp'
 
     if language == 'cpp':
         student_answer = """\n
@@ -195,6 +198,7 @@ if __name__ == "__main__":
 #include <sstream>
 #include <string>
 #include <vector>
+#include <gtest/gtest.h>
 
 
 bool foo(const std::string& date_str) {
@@ -251,6 +255,12 @@ bool foo(const std::string& date_str) {
     }
 }\n\n""" + student_answer
 
+        if '#include' and 'gtest' in saved_for_cpp:
+            raise Exception('Уберите импорт библиотеки :)')
+
+        with open(for_cpp_filename, "w") as src:
+            print(saved_for_cpp, file=src)
+
     else:
         student_answer = """\n
 import pytest
@@ -302,7 +312,7 @@ def foo(date_str):
         if return_code != 0:
             raise Exception("** Compilation failed. Testing aborted **")
 
-        obj = CTestParser(filepath=filename)
+        obj = CTestParser(filepath=for_cpp_filename)
         exec_command = ["./__tester__"]
 
     else:  # Python doesn't need a compile phase
@@ -317,12 +327,13 @@ def foo(date_str):
         if not output.returncode == 0:
             raise Exception("** Error: mistake in user tests **")
 
-        # объект с вызовом метода класса, который пропарсит код и записывает словарь со всеми тестами, аналогичный полю test_cases абстрактного класса, в 
+        # объект с вызовом метода класса, который пропарсит код и записывает словарь со всеми тестами, аналогичный полю test_cases абстрактного класса, в
         # котором отображено наличии у пользователя нужных тестов.
         correctness = obj.analyze_tests()
 
         for el in correctness.keys():
-            if not correctness[el]:  # Если не все тесты проверены студентом, то сохраняем прежний вывод с небольшим упрощением
+            if not correctness[
+                el]:  # Если не все тесты проверены студентом, то сохраняем прежний вывод с небольшим упрощением
                 result = 'Test: {}\n'.format('1')
                 result += 'Your answer: {}\n'.format('Incorrect set of tests.')
                 result += 'Correct: {}\n'.format('Correct set of tests.')

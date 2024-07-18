@@ -1,5 +1,6 @@
-#include <gtest/gtest.h>
-
+TEST(FooTest, ZeroIndex) {
+    EXPECT_EQ(foo(0), false);
+}
 
 TEST(FooTest, NegativeIndex) {
     EXPECT_EQ(foo(-2), false);

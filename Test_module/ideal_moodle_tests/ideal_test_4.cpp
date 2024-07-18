@@ -1,5 +1,3 @@
-#include <gtest/gtest.h>
-
 TEST(TestFoo, InvalidDay) {
     EXPECT_EQ(foo("31.12.2022"), false);
 }
