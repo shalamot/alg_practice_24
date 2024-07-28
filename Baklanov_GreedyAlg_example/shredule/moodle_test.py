@@ -9,6 +9,9 @@ student_answer = """{{ STUDENT_ANSWER | e('py') }}"""
 language = """{{ ANSWER_LANGUAGE | e('py') }}""".lower()
 language_extension_map = {'cpp':'cpp', 'python3':'py'}
 
+if re.search(r'^\s*(import|from)\s+\w+', student_answer, re.MULTILINE):
+    raise Exception('Imports are not allowed in the student answer.')
+
 if language not in language_extension_map.keys():
     raise Exception('Error in question. Unknown/unexpected language ({})'.format(language))
 
@@ -61,7 +64,7 @@ def shredule(dataset):
         if task[0] >= begin:
             res.append(task)
             begin = task[1]
-    return len(res)
+    return res, len(res)
 
 tests = generate()
 len_tests = len(tests)
@@ -71,7 +74,8 @@ COUNT_OPEN_TESTS = 3
 try:
     for test in tests:
         stud_output = subprocess.check_output(exec_command, input=test, universal_newlines=True)
-        expected_output = shredule(test)
+        expected_output_1, expected_output_2 = shredule(test)
+        expected_output = str(expected_output_1) + ' ' + str(expected_output_2)
         if str(expected_output).strip() != stud_output.strip():
             incorrect_count += 1
             if incorrect_count < 3:
