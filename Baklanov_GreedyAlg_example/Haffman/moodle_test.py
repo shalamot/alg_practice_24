@@ -10,6 +10,9 @@ student_answer = """{{ STUDENT_ANSWER | e('py') }}"""
 language = """{{ ANSWER_LANGUAGE | e('py') }}""".lower()
 language_extension_map = {'cpp':'cpp', 'python3':'py'}
 
+if re.search(r'^\s*(import|from)\s+\w+', student_answer, re.MULTILINE):
+    raise Exception('Imports are not allowed in the student answer.')
+
 if language not in language_extension_map.keys():
     raise Exception('Error in question. Unknown/unexpected language ({})'.format(language))
 
@@ -102,7 +105,7 @@ def result_func(dataset):
     huffman_codes = generate_huffman_codes(huffman_tree)
     encoded_text = huffman_encode(dataset, huffman_codes)
     decoded_text = huffman_decode(encoded_text, huffman_tree)
-    return (str(encoded_text), str(decoded_text==dataset))
+    return encoded_text
 
 
 tests = generate()
@@ -113,12 +116,14 @@ COUNT_OPEN_TESTS = 3
 try:
     for test in tests:
         stud_output = subprocess.check_output(exec_command, input=test, universal_newlines=True)
-        a, b = result_func(test)
-        expected_output = a + ' ' + b
+        expected_output = result_func(test)
         if str(expected_output).strip() != stud_output.strip():
             incorrect_count += 1
             if incorrect_count < 3:
-                print('Wrong answer')
+                result = f'Test: {test}\n'
+                result += f'Your answer: {stud_output}\n'
+                result += f'Correct: {expected_output}\n'
+                print(result)
         else:
             correct_count += 1
 except subprocess.CalledProcessError as e:
