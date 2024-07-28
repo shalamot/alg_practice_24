@@ -7,21 +7,15 @@ import subprocess
 import re
 student_answer = """{{ STUDENT_ANSWER | e('py') }}"""
 language = """{{ ANSWER_LANGUAGE | e('py') }}""".lower()
-language_extension_map = {'c':'c', 'cpp':'cpp', 'java':'java', 'python3':'py'}
+language_extension_map = {'cpp':'cpp', 'python3':'py'}
+
+if re.search(r'^\s*(import|from)\s+\w+', student_answer, re.MULTILINE):
+    raise Exception('Imports are not allowed in the student answer.')
 
 if language not in language_extension_map.keys():
     raise Exception('Error in question. Unknown/unexpected language ({})'.format(language))
 
-if language == 'java':
-    # Need to determine public class name in order to name output file. Sigh.
-    # The best I can be bothered to do is to use a regular expression match.
-    match = re.search(r'public\s+class\s+([_a-zA-Z][_a-zA-Z0-9]*)', student_answer, re.DOTALL | re.MULTILINE)
-    if match is None:
-        raise Exception("Unable to determine class name. Does the file include 'public class name'?")
-    classname = match.group(1)
-    filename = classname + '.java'
-else:
-    filename = '__tester__.' + language_extension_map[language]
+filename = '__tester__.' + language_extension_map[language]
 
 # Write the student code to a file
 
@@ -29,23 +23,12 @@ with open(filename, "w") as src:
     print(student_answer, file=src)
 
 # Compile C, C++ and Java
-if language == 'c':
-    cflags = "-std=c99 -Wall -Werror"
-    return_code = subprocess.call("gcc {0} -o __tester__ __tester__.c".format(cflags).split())
-    if return_code != 0:
-        raise Exception("** Compilation failed. Testing aborted **")
-    exec_command = ["./__tester__"]
-elif language == 'cpp':
+if language == 'cpp':
     cppflags = "-Wall -Werror"
     return_code = subprocess.call("g++ {0} -o __tester__ __tester__.cpp".format(cppflags).split())
     if return_code != 0:
         raise Exception("** Compilation failed. Testing aborted **")
     exec_command = ["./__tester__"]
-elif language == 'java':
-    return_code = subprocess.call(['javac', "-J-Xss64m", "-J-Xmx4g", filename])
-    if return_code != 0:
-        raise Exception("** Compilation failed. Testing aborted **")
-    exec_command = ["java", "-Xss16m", "-Xmx500m", classname]
 else: # Python doesn't need a compile phase
     exec_command = ["python3", "./__tester__.py"]
 
