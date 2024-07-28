@@ -9,6 +9,9 @@ student_answer = """{{ STUDENT_ANSWER | e('py') }}"""
 language = """{{ ANSWER_LANGUAGE | e('py') }}""".lower()
 language_extension_map = {'cpp':'cpp', 'python3':'py'}
 
+if re.search(r'^\s*(import|from)\s+\w+', student_answer, re.MULTILINE):
+    raise Exception('Imports are not allowed in the student answer.')
+
 if language not in language_extension_map.keys():
     raise Exception('Error in question. Unknown/unexpected language ({})'.format(language))
 
